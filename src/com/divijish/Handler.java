@@ -7,6 +7,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import java.util.Scanner;
 
@@ -27,29 +29,62 @@ public class Handler {
 			System.exit(0);
 		}
 
-		Scanner inputScanner = new Scanner(System.in);
+		boolean noError = true;
+
+		List<String> errorList = configFileChecker(properties);
+		if (errorList.size() > 0) {
+			noError = false;
+		}
+
+		if (noError) {
+			String inputFileLocation = properties.getProperty("inputFileLocation");
+			String outputFileLocation = properties.getProperty("outputFileLocation");
+
+			Scanner inputScanner = new Scanner(System.in);
+
+			System.out.println("1. Use input and output path to write a file.");
+			System.out.println("2. Write from command line.");
+
+			Integer operation = inputScanner.nextInt();
+
+			switch (operation) {
+
+			case 1:
+				FileMover.mover(inputFileLocation, outputFileLocation);
+				break;
+
+			case 2:
+				try {
+					SystemFileHandler.mover(inputScanner, outputFileLocation);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				break;
+
+			default:
+				System.out.println("Wrong Input!");
+			}
+
+		} else {
+			errorList.stream().forEach(System.out::println);
+		}
+
+	}
+
+	private static List<String> configFileChecker(Properties properties) {
+		List<String> errorList = new ArrayList<String>();
 		String inputFileLocation = properties.getProperty("inputFileLocation");
 		String outputFileLocation = properties.getProperty("outputFileLocation");
-		File inputFile = new File(inputFileLocation);
-		File outputFile = new File(outputFileLocation);
 
-		try {
-			InputStream fileInputStream = new FileInputStream(inputFile);
-		} catch (FileNotFoundException e) {
-			System.out.printf("Could not find file at '%s' location. Please make sure that the file exists. Exiting!", inputFileLocation);
-			System.exit(0);
+		if (inputFileLocation == null) {
+			errorList.add("inputFileLocation not found");
 		}
-		
-		try {
-			OutputStream outputStream = new FileOutputStream(outputFile);
-		} catch (FileNotFoundException e) {
-			
-			System.out.printf("Error creating file at '%s' location. Please make sure utility has access to this location. Exiting!", outputFileLocation);
+
+		if (outputFileLocation == null) {
+			errorList.add("outputFileLocation not found");
 		}
-		
-		
-		
-		
+
+		return errorList;
 
 	}
 
